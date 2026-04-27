@@ -1,6 +1,6 @@
-# LeadPilot 🚀
+# Conversa 🚀
 
-LeadPilot is an AI-powered lead generation SaaS that includes a chatbot platform capable of scraping websites, indexing documents, and providing intelligent responses based on your data.
+Conversa is an AI-powered lead generation SaaS that includes a chatbot platform capable of scraping websites, indexing documents, and providing intelligent responses based on your data.
 
 ## Project Structure
 
@@ -95,4 +95,4 @@ Both the frontend and backend require environment variables.
 
 ## 📄 License
 
-This project is private and intended for LeadPilot internal use.
+This project is private and intended for Conversa internal use.
