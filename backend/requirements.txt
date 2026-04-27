@@ -1,0 +1,43 @@
+# ============================================================
+# Conversa Backend — Python Dependencies
+# Install: pip install -r requirements.txt
+# ============================================================
+
+# Web framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+
+# Supabase client
+supabase==2.13.0
+
+# HTTP client (async — used for scraping + Supabase calls)
+httpx==0.28.1
+
+# Web scraping
+beautifulsoup4==4.13.4
+lxml==5.4.0
+playwright==1.42.0
+
+# LangChain (AI agent orchestration)
+langchain==0.3.25
+langchain-groq==0.3.2
+langchain-community==0.3.24
+
+# Embeddings (local, free — no API key needed)
+sentence-transformers==4.1.0
+
+# Environment variable management
+pydantic-settings==2.9.1
+python-dotenv==1.1.0
+
+# JWT token validation (for Supabase auth)
+python-jose[cryptography]==3.4.0
+
+# Text processing
+tiktoken==0.9.0
+pypdf==4.1.0
+python-docx==1.1.0
+ultimate-sitemap-parser==0.5.2
+pandas==2.2.3
+openpyxl==3.1.5
+python-multipart==0.0.22
