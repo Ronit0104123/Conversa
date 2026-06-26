@@ -15,6 +15,7 @@ import {
   X
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { Logo } from '@/components/Logo'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -60,9 +61,8 @@ export default function DashboardLayout({ children }) {
       )}>
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Bot className="h-6 w-6 text-indigo-600" />
-            <span className="text-lg font-bold tracking-tight text-slate-900">Conversa</span>
+          <Link href="/dashboard">
+            <Logo showText={true} textClassName="text-lg font-bold tracking-tight text-slate-900" className="h-6 w-6" />
           </Link>
           <button 
             className="lg:hidden text-slate-500 hover:text-slate-700"

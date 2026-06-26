@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { login } from '@/app/actions/auth'
 import { Loader2, Mail, Lock, ArrowRight, MessageSquare } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 
 export default function LoginPage() {
   const [error, setError] = useState(null)
@@ -58,11 +59,8 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-md px-6 flex flex-col items-center">
         {/* Logo Section */}
-        <div className="mb-10 flex flex-col items-center gap-2">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-            <MessageSquare className="h-6 w-6 text-white fill-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Conversa</h1>
+        <div className="mb-10">
+          <Logo showText={true} textClassName="text-2xl font-bold text-slate-900 tracking-tight" className="h-12 w-12" />
         </div>
 
         {/* Login Card */}

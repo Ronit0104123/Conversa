@@ -44,7 +44,7 @@ def _sanitize_assistant_message(content: str) -> str:
     return cleaned.strip()
 
 
-def load_chat_history(session_id: str, max_messages: int = 20) -> List:
+async def load_chat_history(session_id: str, max_messages: int = 20) -> List:
     """
     Loads recent chat history from the database and converts to 
     LangChain message objects.
@@ -62,7 +62,7 @@ def load_chat_history(session_id: str, max_messages: int = 20) -> List:
     taking ~2k tokens and the system prompt ~1k tokens, we have ~5k 
     tokens for history. 20 messages is roughly 2-3k tokens — safe margin.
     """
-    messages = queries.get_session_messages(session_id, limit=max_messages)
+    messages = await queries.get_session_messages(session_id, limit=max_messages)
     
     langchain_messages = []
     for msg in messages:

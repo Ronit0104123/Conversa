@@ -27,9 +27,19 @@ from typing import Optional
 from app.db import queries
 from app.services.embedding import generate_embeddings
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 MIN_TOOL_SEARCH_SIMILARITY = 0.15
+
+
+def is_valid_email(email: str) -> bool:
+    """Check if the string is a valid email address."""
+    if not email:
+        return False
+    # Simple regex for email validation
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
 
 
 # ============================================================
@@ -37,7 +47,7 @@ MIN_TOOL_SEARCH_SIMILARITY = 0.15
 # ============================================================
 
 @tool
-def save_lead(
+async def save_lead(
     chatbot_id: str,
     session_id: str,
     name: Optional[str] = None,
@@ -64,11 +74,15 @@ def save_lead(
         phone = phone.strip() if isinstance(phone, str) else phone
         company = company.strip() if isinstance(company, str) else company
 
-        # Require at least one reliable identifier to avoid empty/low-quality leads.
-        if not name and not email:
-            return "No lead saved: missing required lead details (name or email)."
+        # Validate email
+        if email and not is_valid_email(email):
+            return f"No lead saved: '{email}' is not a valid email format. Please ask the visitor for a proper email address (e.g., name@example.com)."
 
-        lead = queries.save_lead(
+        # Require a valid email address to avoid low-quality leads.
+        if not email:
+            return "No lead saved: missing email address. A valid email is required to save a lead."
+
+        lead = await queries.save_lead(
             chatbot_id=chatbot_id,
             session_id=session_id,
             name=name,
@@ -88,7 +102,7 @@ def save_lead(
 # ============================================================
 
 @tool
-def search_website(query: str, chatbot_id: str) -> str:
+async def search_website(query: str, chatbot_id: str) -> str:
     """Search the website's content for information relevant to the query.
     Use this when you need additional context beyond what's already provided
     to answer the visitor's question.
@@ -99,10 +113,10 @@ def search_website(query: str, chatbot_id: str) -> str:
     """
     try:
         # Generate embedding for the search query
-        query_embedding = generate_embeddings([query])[0]
+        query_embedding = (await generate_embeddings([query]))[0]
         
         # Search pgvector for similar chunks
-        results = queries.search_similar_documents(
+        results = await queries.search_similar_documents(
             chatbot_id=chatbot_id,
             query_embedding=query_embedding,
             top_k=3,

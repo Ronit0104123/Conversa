@@ -1,0 +1,124 @@
+Page title: Conversa | AI Chatbot Platform for Lead Generation
+Page description: Conversa turns your website into a lead-generating AI chatbot. Train it on your content in seconds. Embed it with one script tag. Free to get started.
+
+---
+
+## What is Conversa?
+
+Conversa is an AI chatbot platform that helps businesses capture leads and answer customer questions automatically — 24/7, without any human effort.
+
+You give Conversa your website URL. Our AI scrapes and indexes your content, then creates a custom chatbot that knows everything on your site. Visitors can ask it anything, and it responds using your actual website content. When a visitor shows interest, Conversa naturally captures their name, email, and phone number for your team to follow up.
+
+---
+
+## How It Works — 3 Simple Steps
+
+**Step 1: Paste your URL**
+Enter your website address (or upload a document/PDF). Conversa will read and index all the content.
+
+**Step 2: AI trains your chatbot**
+Our engine processes your content and builds a custom chatbot in seconds. No manual configuration needed.
+
+**Step 3: Embed the script**
+Copy and paste one line of code onto your website. Your chatbot is live instantly.
+
+Total setup time: under 2 minutes.
+
+---
+
+## Features
+
+### AI Responses
+Conversa uses advanced natural language understanding to answer visitor questions accurately — in a natural, conversational tone. The responses are based on your actual website content, so nothing is made up.
+
+### Automatic Lead Capture
+When a visitor shows buying intent (asks about pricing, wants a demo, asks how to get started), Conversa naturally asks for their contact information. It collects names, emails, and phone numbers in the flow of conversation — no popups, no forms.
+
+### Analytics Dashboard
+See exactly what your visitors are asking most. Track conversation volume, common topics, lead conversion rates, and more. Understand your customers better than ever.
+
+### Fast Setup
+From entering your URL to having a live chatbot on your site takes under 2 minutes. No developers needed.
+
+### Customization
+Match Conversa to your brand. Customize colors, the chatbot's name, its tone and personality, and its position on your site.
+
+### Secure
+All data is encrypted with enterprise-grade security. Visitor conversations are private and protected.
+
+---
+
+## Pricing
+
+Conversa is completely free to get started. No credit card required.
+
+There are no paid plans at this time. Create your account, build your chatbot, and embed it on your site — all for free.
+
+---
+
+## Who Is Conversa For?
+
+Conversa is built for businesses that want to:
+- Stop losing website visitors who leave without contacting them
+- Capture leads automatically without hiring more staff
+- Answer common customer questions instantly, even outside business hours
+- Understand what their website visitors actually want
+
+It works for any business with a website — agencies, SaaS companies, local businesses, e-commerce stores, consultants, and more.
+
+---
+
+## Getting Started
+
+1. Go to conversa.ai and click "Get Started Free"
+2. Create your account — no credit card needed
+3. Enter your website URL
+4. Wait a few seconds for your chatbot to train
+5. Copy the embed script and paste it into your website's HTML
+6. Done — your chatbot is live
+
+---
+
+## Frequently Asked Questions
+
+**How long does setup take?**
+Under 2 minutes from signing up to having a live chatbot on your website.
+
+**Do I need a developer to install it?**
+No. You paste one line of code into your website's HTML. If you use WordPress, Webflow, Squarespace, or similar platforms, there are simple ways to add the script without touching code.
+
+**What if my website content changes?**
+You can re-train your chatbot anytime from the dashboard. It will scrape your latest content and update its knowledge.
+
+**What kind of leads does it capture?**
+Conversa captures name, email address, and phone number. All leads appear in your dashboard and can be exported.
+
+**Does it work in multiple languages?**
+Yes. Conversa understands and responds in the language the visitor uses.
+
+**Is my data secure?**
+Yes. All conversations and lead data are encrypted and stored securely. We never share your data with third parties.
+
+**Can I customize what the chatbot says?**
+Yes. You can edit the chatbot's tone, personality, and even write a custom system prompt from the dashboard.
+
+**What if a visitor asks something the chatbot doesn't know?**
+Conversa will politely say it doesn't have that information and offer to have someone from the team reach out — turning uncertainty into a lead opportunity.
+
+**Is there a free plan?**
+Conversa is completely free to use right now. No credit card required. No hidden fees.
+
+**How do I get support?**
+Reach out via the chat on our site or email us. Our team is happy to help with setup, customization, or any questions.
+
+---
+
+## Why Conversa vs. a Regular Contact Form?
+
+A contact form sits there passively. Conversa actively engages visitors, answers their questions, builds trust, and captures their info at the exact moment they're most interested. Studies show live chat and chatbots convert 3-5x more visitors than forms alone.
+
+---
+
+## Contact & Team
+
+Conversa is built by a small team focused on making lead generation effortless for every business. If you want to get in touch, use the chat on this page or sign up and reach out from the dashboard.

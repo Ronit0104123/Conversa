@@ -533,7 +533,7 @@
     const typing = showTyping();
 
     try {
-      const response = await fetch(API_URL + '/api/chat/', {
+      const response = await fetch(API_URL + '/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -548,38 +548,68 @@
         let errorMessage = 'Chat request failed';
         try {
           const errorData = await response.json();
-          if (errorData && errorData.detail) {
-            errorMessage = errorData.detail;
-          }
-        } catch (_) {
-          // Keep fallback message when error payload is not JSON.
-        }
+          if (errorData && errorData.detail) errorMessage = errorData.detail;
+        } catch (_) {}
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-
-      // Save session ID for future messages
-      if (data.session_id) {
-        setSessionId(data.session_id);
-      }
-
-      // Remove typing indicator
+      // Remove typing indicator as soon as stream starts
       typing.remove();
 
-      // Show bot response
-      const botMsg = addMessage(data.agent_response.response, 'bot');
+      // Create an empty bot message to fill with stream
+      const botMsg = addMessage('', 'bot');
+      let fullContent = '';
 
-      // If lead was captured, show success indicator
-      if (data.agent_response.lead_captured) {
-        const success = document.createElement('div');
-        success.className = 'conversa-lead-success';
-        success.textContent = '✓ Thanks! Your info has been saved.';
-        botMsg.appendChild(success);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Split by double newline (SSE standard separator) or single newline
+        // We look for \n\n because each 'data: ' line should end with \n\n
+        let lines = buffer.split('\n');
+        
+        // Keep the last partial line in the buffer
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+          
+          try {
+            const data = JSON.parse(trimmedLine.slice(6));
+            
+            if (data.type === 'chunk') {
+              fullContent += data.content;
+              botMsg.textContent = fullContent;
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else if (data.type === 'metadata') {
+              if (data.session_id) setSessionId(data.session_id);
+              
+              if (data.lead_captured) {
+                const success = document.createElement('div');
+                success.className = 'conversa-lead-success';
+                success.textContent = '✓ Thanks! Your info has been saved.';
+                botMsg.appendChild(success);
+              }
+            } else if (data.type === 'error') {
+              throw new Error(data.content);
+            }
+          } catch (e) {
+            // Ignore parse errors for partial/malformed lines during streaming
+            // but log them for debugging if needed
+            console.warn('[Conversa] Stream parse warning:', e, trimmedLine);
+          }
+        }
       }
 
     } catch (error) {
-      typing.remove();
+      if (typing) typing.remove();
       addMessage(error.message || 'Sorry, I\'m having trouble connecting. Please try again.', 'bot');
       console.error('[Conversa] Chat error:', error);
     } finally {

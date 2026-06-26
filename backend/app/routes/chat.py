@@ -7,19 +7,98 @@ Contains:
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import StreamingResponse
+import json
+from pydantic import BaseModel
 from app.models.chat import (
-    ChatMessageRequest, 
-    ChatMessageResponse, 
-    ChatSessionResponse, 
+    ChatMessageRequest,
+    ChatMessageResponse,
+    ChatSessionResponse,
     MessageResponse
 )
-from app.agent.agent import run_agent
+from app.agent.agent import run_agent, stream_run_agent
 from app.db import queries
-from typing import List
+from typing import List, Optional
 from app.middleware.auth import get_current_user
+from app.config import settings
 from datetime import datetime, timezone
 
 router = APIRouter()
+
+# ============================================================
+# LANDING PAGE DEMO ENDPOINT (No DB, no auth)
+# ============================================================
+
+DEMO_SYSTEM_PROMPT = """You are the Conversa assistant on our landing page. Conversa is an AI chatbot platform that helps businesses turn their website into a lead-generating chatbot.
+
+## What Conversa Does
+- Paste your website URL — our AI scrapes and indexes your content in seconds
+- A custom chatbot trained on YOUR website content goes live instantly
+- Embed it with one line of code — takes under 2 minutes total
+- The chatbot answers visitor questions, captures leads (emails, phones), and gives you analytics on what customers are asking
+
+## Key Features
+- **AI responses**: Human-like natural language understanding using your actual website content
+- **Lead capture**: Automatically collects emails and phone numbers in the natural flow of conversation
+- **Analytics**: Deep insights into what your customers ask most
+- **Fast setup**: From URL to live chatbot in under 2 minutes
+- **Customization**: Match your brand colors, tone, and personality
+- **Security**: Enterprise-grade encryption for all your data
+- **Free to start**: No credit card required
+
+## Your Behavior
+- Speak as "we" — you ARE Conversa, not an external assistant
+- Keep responses short: 1-3 sentences unless asked for detail
+- Only discuss Conversa and how it can help the visitor's business
+- For off-topic questions, redirect: "I can only help with questions about Conversa — is there something specific you'd like to know?"
+- When a visitor asks about pricing, a demo, or how to get started, ask for their name and email so our team can follow up personally
+- For questions you can't answer specifically: "I don't have those details handy — want me to have someone from our team reach out?"
+- Never be pushy about contact info"""
+
+
+class _DemoMessage(BaseModel):
+    role: str
+    content: str
+
+
+class DemoChatRequest(BaseModel):
+    message: str
+    history: List[_DemoMessage] = []
+
+
+@router.post("/demo")
+async def chat_demo_endpoint(request: DemoChatRequest):
+    """
+    Stateless demo chat for the landing page.
+    No DB, no chatbot_id, no auth — just Groq + hardcoded Conversa product prompt.
+    """
+    from langchain_groq import ChatGroq
+    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+
+    llm = ChatGroq(
+        model=settings.GROQ_MODEL,
+        api_key=settings.GROQ_API_KEY,
+        temperature=0.7,
+        max_tokens=512,
+    )
+
+    messages = [SystemMessage(content=DEMO_SYSTEM_PROMPT)]
+    for msg in request.history:
+        if msg.role == "user":
+            messages.append(HumanMessage(content=msg.content))
+        elif msg.role == "assistant":
+            messages.append(AIMessage(content=msg.content))
+    messages.append(HumanMessage(content=request.message))
+
+    async def event_generator():
+        try:
+            async for chunk in llm.astream(messages):
+                if chunk.content:
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': chunk.content})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 # ============================================================
 # PUBLIC ENDPOINT (Called by widget)
@@ -96,6 +175,61 @@ async def chat_endpoint(request: ChatMessageRequest):
         agent_response=agent_response,
         created_at=datetime.now(timezone.utc)
     )
+
+
+@router.post("/stream")
+async def chat_stream_endpoint(request: ChatMessageRequest):
+    """
+    Streaming version of the public chat endpoint.
+    Returns a Server-Sent Events (SSE) stream.
+    """
+    chatbot = await queries.get_chatbot(request.chatbot_id)
+    if not chatbot:
+        raise HTTPException(status_code=404, detail="Chatbot not found")
+
+    # Validation logic (same as standard endpoint)
+    status_value = chatbot.get("status")
+    if status_value in ["processing", "error"]:
+        raise HTTPException(status_code=409, detail=f"Chatbot status: {status_value}")
+
+    session_id = request.session_id
+    if not session_id:
+        session = await queries.create_chat_session(request.chatbot_id, request.visitor_id)
+        session_id = session["id"]
+
+    await queries.save_message(session_id, "user", request.message)
+
+    async def event_generator():
+        full_response = ""
+        metadata = {}
+        
+        try:
+            async for event in stream_run_agent(
+                chatbot_id=request.chatbot_id,
+                session_id=session_id,
+                user_message=request.message,
+                custom_system_prompt=chatbot.get("system_prompt")
+            ):
+                if event["type"] == "chunk":
+                    full_response += event["content"]
+                    yield f"data: {json.dumps(event)}\n\n"
+                elif event["type"] == "metadata":
+                    metadata = event
+                    yield f"data: {json.dumps(event)}\n\n"
+            
+            # Save the complete assistant message to DB after stream finishes
+            await queries.save_message(
+                session_id, 
+                "assistant", 
+                full_response, 
+                {"lead_captured": metadata.get("lead_captured", False)}
+            )
+            
+        except Exception as e:
+            error_data = {"type": "error", "content": str(e)}
+            yield f"data: {json.dumps(error_data)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @router.get("/history", response_model=List[MessageResponse])

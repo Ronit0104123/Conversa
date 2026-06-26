@@ -20,7 +20,10 @@ export async function POST(request) {
       );
     }
 
-    const response = await fetch(`${API_URL}/api/chat/`, {
+    const isStream = body?.stream === true;
+    const endpoint = isStream ? "/api/chat/stream" : "/api/chat/";
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -32,15 +35,26 @@ export async function POST(request) {
       cache: "no-store",
     });
 
-    const data = await response.json().catch(() => ({}));
-
     if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
       return NextResponse.json(
         { error: data?.detail || "Demo chatbot request failed." },
         { status: response.status }
       );
     }
 
+    // If it's a stream, pipe it through
+    if (isStream) {
+      return new Response(response.body, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    const data = await response.json();
     return NextResponse.json({
       session_id: data?.session_id || null,
       response: data?.agent_response?.response || "",

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getChatbot, listChatbotLeads, listChatSessions } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Bot, Users, MessageSquare, Code, Copy, Check, RefreshCw, ChevronDown, ChevronUp, FileUp } from 'lucide-react'
+import { ArrowLeft, Bot, Users, MessageSquare, Code, Copy, Check, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { triggerScrape } from '@/lib/api'
@@ -25,7 +25,7 @@ export default function ChatbotDetailPage() {
   const [maxPages, setMaxPages] = useState(1)
   const [recursive, setRecursive] = useState(false)
   const [respectRobots, setRespectRobots] = useState(true)
-  const [uploading, setUploading] = useState(false)
+  const [retraining, setRetraining] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -91,7 +91,8 @@ export default function ChatbotDetailPage() {
   }
 
   async function handleRetrain() {
-    if (!token || !chatbot) return
+    if (!token || !chatbot || retraining) return
+    setRetraining(true)
     try {
       await triggerScrape(token, chatbot.id, chatbot.website_url, {
         max_pages: parseInt(maxPages),
@@ -103,6 +104,8 @@ export default function ChatbotDetailPage() {
       setShowAdvanced(false)
     } catch (error) {
       toast.error('Failed to start re-scraping')
+    } finally {
+      setRetraining(false)
     }
   }
 
@@ -168,7 +171,7 @@ export default function ChatbotDetailPage() {
                 variant="outline" 
                 size="sm" 
                 onClick={handleRetrain}
-                disabled={chatbot.status === 'processing'}
+                disabled={chatbot.status === 'processing' || retraining}
                 className="w-full sm:w-auto"
               >
                 <RefreshCw className={`h-4 w-4 mr-1 ${chatbot.status === 'processing' ? 'animate-spin' : ''}`} />

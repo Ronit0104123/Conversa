@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BarChart3, Bot, Handshake, Palette, Rocket, ShieldCheck } from "lucide-react";
 import { InteractiveDashboardMockup } from "@/components/InteractiveDashboardMockup";
+import { Logo } from "@/components/Logo";
 
 const FEATURES = [
   {
@@ -74,6 +75,9 @@ export default function Home() {
     setIsSending(true);
 
     try {
+      // Add a placeholder message for the assistant
+      setMessages((prev) => [...prev, { role: "assistant", text: "" }]);
+      
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,26 +85,57 @@ export default function Home() {
           message: text,
           session_id: sessionId,
           visitor_id: visitorId,
+          stream: true, // Hint to the proxy that we want a stream
         }),
       });
 
-      const payload = await response.json();
-
       if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
         throw new Error(payload.error || "Unable to reach demo chatbot right now.");
       }
 
-      if (payload.session_id) {
-        setSessionId(payload.session_id);
-      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let buffer = "";
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: payload.response || "I could not generate a response right now." },
-      ]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop(); // Keep partial line in buffer
+
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (!trimmedLine || !trimmedLine.startsWith("data: ")) continue;
+          
+          try {
+            const data = JSON.parse(trimmedLine.slice(6));
+            
+            if (data.type === "chunk") {
+              fullText += data.content;
+              // Update the LAST message in the state
+              setMessages((prev) => {
+                const next = [...prev];
+                const lastIdx = next.length - 1;
+                if (next[lastIdx].role === "assistant") {
+                  next[lastIdx] = { role: "assistant", text: fullText };
+                }
+                return next;
+              });
+            } else if (data.type === "metadata") {
+              if (data.session_id) setSessionId(data.session_id);
+            }
+          } catch (e) {
+            console.warn("Stream parse warning:", e, trimmedLine);
+          }
+        }
+      }
     } catch (error) {
       setMessages((prev) => [
-        ...prev,
+        ...prev.slice(0, -1), // Remove the empty placeholder if error
         {
           role: "assistant",
           text: error.message || "Sorry, I am having trouble connecting. Please try again.",
@@ -115,7 +150,9 @@ export default function Home() {
     <div className="bg-white text-slate-900">
       <nav className="fixed top-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="text-2xl font-semibold tracking-tight">Conversa</div>
+          <Link className="flex items-center gap-2" href="/">
+            <Logo showText={true} />
+          </Link>
           
           {/* Desktop Nav */}
           <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
@@ -145,7 +182,7 @@ export default function Home() {
               className="p-2 -mr-2 text-slate-600 md:hidden"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <Bot className="h-6 w-6" />
+              <Logo className="h-6 w-6" />
             </button>
           </div>
         </div>
@@ -278,7 +315,7 @@ export default function Home() {
             <div className="mt-12 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
               <div className="flex items-center justify-between bg-gradient-to-br from-indigo-600 to-fuchsia-500 p-6 text-white">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">AI</div>
+                  <Logo className="h-10 w-10" />
                   <div>
                     <p className="text-sm font-semibold">Conversa Assistant</p>
                     <p className="text-xs opacity-80">Always active</p>
@@ -287,20 +324,23 @@ export default function Home() {
                 <span className="text-sm">Menu</span>
               </div>
               <div className="space-y-6 p-8 text-sm text-slate-700">
-                {messages.map((message, index) => (
-                  <div key={`${message.role}-${index}`} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                    <div
-                      className={
-                        message.role === "user"
-                          ? "max-w-[80%] rounded-2xl rounded-tr-none bg-gradient-to-br from-indigo-600 to-fuchsia-500 p-4 text-white"
-                          : "max-w-[80%] rounded-2xl rounded-tl-none bg-slate-100 p-4"
-                      }
-                    >
-                      {message.text}
+                {messages.map((message, index) => {
+                  if (!message.text && message.role === "assistant") return null;
+                  return (
+                    <div key={`${message.role}-${index}`} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                      <div
+                        className={
+                          message.role === "user"
+                            ? "max-w-[80%] rounded-2xl rounded-tr-none bg-gradient-to-br from-indigo-600 to-fuchsia-500 p-4 text-white"
+                            : "max-w-[80%] rounded-2xl rounded-tl-none bg-slate-100 p-4"
+                        }
+                      >
+                        {message.text}
+                      </div>
                     </div>
-                  </div>
-                ))}
-                {isSending && (
+                  );
+                })}
+                {isSending && (!messages[messages.length - 1]?.text || messages[messages.length - 1].role !== "assistant") && (
                   <div className="flex justify-start">
                     <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-slate-100 p-4 text-slate-500">
                       Thinking...
@@ -357,9 +397,9 @@ export default function Home() {
 
       <footer className="border-t border-slate-200 bg-slate-50 py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 md:flex-row">
-          <div>
-            <div className="text-lg font-semibold">Conversa</div>
-            <p className="mt-2 text-sm text-slate-500">© Conversiq (MVP)</p>
+          <div className="flex flex-col gap-2">
+            <Logo showText={true} />
+            <p className="text-sm text-slate-500">© 2026 Conversa Inc.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-500">
             <a className="hover:text-indigo-600" href="#">

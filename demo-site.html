@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Northwind Logistics — Real-Time Freight Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0d14;
+      --bg-card:   #111520;
+      --bg-card2:  #161b28;
+      --border:    #1e2535;
+      --border-hi: #2a3450;
+      --accent:    #3b6ef8;
+      --accent-lo: rgba(59,110,248,.12);
+      --accent-hi: #5b8aff;
+      --text:      #e8ecf5;
+      --text-muted:#8a93aa;
+      --text-dim:  #4e5670;
+      --green:     #22c985;
+      --radius:    12px;
+      --radius-lg: 20px;
+      --shadow:    0 2px 16px rgba(0,0,0,.45);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,.6);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── Layout helpers ───────────────────────────────────────── */
+    .container {
+      width: min(1160px, 100%);
+      margin-inline: auto;
+      padding-inline: 24px;
+    }
+
+    section { padding-block: 96px; }
+
+    /* ── NAV ─────────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,13,20,.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      height: 64px;
+    }
+
+    .logo {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--text);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 32px;
+      margin-left: auto;
+    }
+
+    .nav-links a {
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: color .15s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: .875rem;
+      font-weight: 600;
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hi);
+      box-shadow: 0 0 0 4px rgba(59,110,248,.22);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      color: var(--text);
+      font-size: .875rem;
+      font-weight: 600;
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hi);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      white-space: nowrap;
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg-card2);
+      border-color: var(--text-dim);
+    }
+
+    /* ── HERO ────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      padding-block: 120px 100px;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    /* Background grid */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(59,110,248,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,110,248,.06) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* Glow blobs */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      opacity: .55;
+    }
+
+    .blob-blue {
+      width: 560px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(59,110,248,.35) 0%, transparent 70%);
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .blob-teal {
+      width: 320px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(34,201,133,.2) 0%, transparent 70%);
+      bottom: 0;
+      right: 10%;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-lo);
+      border: 1px solid rgba(59,110,248,.3);
+      color: var(--accent-hi);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 100px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.8); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.5vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -.04em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent-hi) 0%, var(--green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      margin-inline: auto;
+      margin-bottom: 40px;
+      font-weight: 400;
+      line-height: 1.65;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .hero-ctas .btn-primary { padding: 12px 28px; font-size: .95rem; }
+    .hero-ctas .btn-ghost   { padding: 12px 28px; font-size: .95rem; }
+
+    .hero-note {
+      margin-top: 18px;
+      font-size: .78rem;
+      color: var(--text-dim);
+    }
+
+    /* ── LOGO BAR ────────────────────────────────────────────── */
+    .logo-bar {
+      padding-block: 40px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-bar-label {
+      text-align: center;
+      font-size: .78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text-dim);
+      margin-bottom: 28px;
+    }
+
+    .logo-bar-names {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(24px, 5vw, 64px);
+      flex-wrap: wrap;
+    }
+
+    .brand-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: -.01em;
+      opacity: .7;
+      transition: opacity .2s;
+    }
+
+    .brand-name:hover { opacity: 1; color: var(--text-muted); }
+
+    /* ── FEATURES ────────────────────────────────────────────── */
+    .features { border-bottom: 1px solid var(--border); }
+
+    .section-label {
+      display: inline-block;
+      font-size: .78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--accent-hi);
+      margin-bottom: 12px;
+    }
+
+    .section-heading {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin-bottom: 64px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-hi);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent-lo);
+      border: 1px solid rgba(59,110,248,.25);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .feature-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-size: .9rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ── HOW IT WORKS ────────────────────────────────────────── */
+    .how { background: var(--bg-card); border-block: 1px solid var(--border); }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 40px;
+      margin-top: 64px;
+      position: relative;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step-num {
+      width: 44px;
+      height: 44px;
+      background: var(--accent);
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    .step-desc {
+      font-size: .9rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ── STATS ───────────────────────────────────────────────── */
+    .stats { border-bottom: 1px solid var(--border); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-top: 64px;
+    }
+
+    .stat {
+      background: var(--bg-card);
+      padding: 40px 32px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--text) 40%, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: .875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ── FAQ ─────────────────────────────────────────────────── */
+    .faq { border-bottom: 1px solid var(--border); }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 24px;
+      margin-top: 64px;
+    }
+
+    @media (max-width: 640px) {
+      .faq-grid { grid-template-columns: 1fr; }
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      transition: border-color .2s;
+    }
+
+    .faq-item:hover { border-color: var(--border-hi); }
+
+    .faq-q {
+      font-size: .975rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .faq-q::before {
+      content: 'Q';
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--accent-hi);
+      background: var(--accent-lo);
+      border: 1px solid rgba(59,110,248,.25);
+      padding: 2px 7px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .faq-a {
+      font-size: .875rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      padding-left: 34px;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────────────── */
+    footer {
+      padding-block: 64px 40px;
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 1.8fr repeat(3, 1fr);
+      gap: 48px;
+      padding-bottom: 48px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .footer-brand { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 480px) {
+      .footer-inner { grid-template-columns: 1fr; }
+    }
+
+    .footer-brand .logo { margin-bottom: 12px; }
+
+    .footer-tagline {
+      font-size: .875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 260px;
+    }
+
+    .footer-col h4 {
+      font-size: .8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-col a {
+      font-size: .875rem;
+      color: var(--text-muted);
+      transition: color .15s;
+    }
+
+    .footer-col a:hover { color: var(--text); }
+
+    .footer-bottom {
+      padding-top: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-copy {
+      font-size: .8rem;
+      color: var(--text-dim);
+    }
+
+    .footer-legal {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-legal a {
+      font-size: .8rem;
+      color: var(--text-dim);
+      transition: color .15s;
+    }
+
+    .footer-legal a:hover { color: var(--text-muted); }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      section { padding-block: 64px; }
+      .hero { padding-block: 80px 60px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ─────────────────────────────────────────────────── -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-mark">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 5L8 2L14 5V11L8 14L2 11V5Z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="8" cy="8" r="2" fill="#fff"/>
+          </svg>
+        </div>
+        Northwind
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Product</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#faq">Pricing</a></li>
+        <li><a href="#faq">Docs</a></li>
+      </ul>
+      <a href="#" class="btn-primary" style="margin-left:auto;">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- ── HERO ─────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="blob blob-blue"></div>
+    <div class="blob blob-teal"></div>
+    <div class="container" style="position:relative;z-index:1;">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Now tracking 2M+ shipments daily
+      </div>
+      <h1>
+        Freight visibility<br />
+        that <span>actually works</span>
+      </h1>
+      <p class="hero-sub">
+        Northwind unifies your carriers, customs data, and warehouse feeds into a single real-time control tower — so you stop chasing status emails and start making decisions.
+      </p>
+      <div class="hero-ctas">
+        <a href="#" class="btn-primary">
+          Start free trial
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="#how" class="btn-ghost">See how it works</a>
+      </div>
+      <p class="hero-note">No credit card required · Setup in under 15 minutes · SOC 2 Type II certified</p>
+    </div>
+  </section>
+
+  <!-- ── LOGO BAR ──────────────────────────────────────────────── -->
+  <div class="logo-bar">
+    <div class="container">
+      <p class="logo-bar-label">Trusted by logistics teams at</p>
+      <div class="logo-bar-names">
+        <span class="brand-name">Crestline Goods</span>
+        <span class="brand-name">Vantara Supply</span>
+        <span class="brand-name">Ironclad Freight</span>
+        <span class="brand-name">Meridian Trade Co.</span>
+        <span class="brand-name">Solaris Distribution</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FEATURES ──────────────────────────────────────────────── -->
+  <section class="features" id="features">
+    <div class="container">
+      <span class="section-label">Platform</span>
+      <h2 class="section-heading">Everything in one control tower</h2>
+      <p class="section-sub">Built for operations teams who manage multi-modal shipments across dozens of carriers and three or more customs jurisdictions.</p>
+
+      <div class="feature-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="3" stroke="#3b6ef8" stroke-width="1.8"/>
+              <path d="M11 2v3M11 17v3M2 11h3M17 11h3M4.22 4.22l2.12 2.12M15.66 15.66l2.12 2.12M4.22 17.78l2.12-2.12M15.66 6.34l2.12-2.12" stroke="#3b6ef8" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Real-Time Shipment Tracking</h3>
+          <p class="feature-desc">Live GPS and carrier-API polling every 90 seconds across ocean, air, rail, and last-mile. One map, every shipment, no manual refreshes.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M3 17L7 10L11 13L15 7L19 4" stroke="#3b6ef8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 19h16" stroke="#3b6ef8" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Predictive Route Optimization</h3>
+          <p class="feature-desc">ML models trained on 40M historical lanes surface the fastest, cheapest path before you book — factoring in port congestion, weather, and carrier reliability scores.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <rect x="3" y="5" width="16" height="12" rx="2" stroke="#3b6ef8" stroke-width="1.8"/>
+              <path d="M7 9h4M7 12h8M7 15h5" stroke="#3b6ef8" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Automated Customs Clearance</h3>
+          <p class="feature-desc">Pre-fill HS codes, generate commercial invoices, and push documents directly to your customs broker's portal — cutting clearance prep from hours to minutes.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M4 8h14M4 11h10M4 14h7" stroke="#3b6ef8" stroke-width="1.8" stroke-linecap="round"/>
+              <rect x="3" y="4" width="16" height="15" rx="2" stroke="#3b6ef8" stroke-width="1.8"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Exception Management & Alerts</h3>
+          <p class="feature-desc">Configurable rules fire Slack, email, or webhook alerts the moment a shipment goes off-plan — delay, temperature breach, or document rejection.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <path d="M11 3L4 7v5c0 3.5 3 6.7 7 7.9 4-1.2 7-4.4 7-7.9V7L11 3Z" stroke="#3b6ef8" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M8 11l2 2 4-4" stroke="#3b6ef8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Carrier Contract Intelligence</h3>
+          <p class="feature-desc">Upload your rate cards and let Northwind auto-select the contracted carrier for each lane, flag when spot rates beat your contract, and audit invoices against agreed tariffs.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="8" cy="8" r="3" stroke="#3b6ef8" stroke-width="1.8"/>
+              <circle cx="16" cy="14" r="3" stroke="#3b6ef8" stroke-width="1.8"/>
+              <path d="M11 8h4a3 3 0 0 1 0 6" stroke="#3b6ef8" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">ERP & WMS Integrations</h3>
+          <p class="feature-desc">Native connectors for SAP, Oracle NetSuite, Microsoft Dynamics 365, and 80+ WMS platforms. Two-way sync keeps your system of record authoritative.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS ───────────────────────────────────────────── -->
+  <section class="how" id="how">
+    <div class="container">
+      <span class="section-label">Getting started</span>
+      <h2 class="section-heading">Up and running in an afternoon</h2>
+      <p class="section-sub">No multi-month implementation. No consultants required.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3 class="step-title">Connect your carriers & ERPs</h3>
+          <p class="step-desc">Authenticate your existing carrier accounts (FedEx, DHL, Maersk, and 200+ others) and your ERP via OAuth or API key. Northwind starts pulling historical and live data immediately — no spreadsheet imports needed.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3 class="step-title">Configure your lanes & rules</h3>
+          <p class="step-desc">Define your shipping lanes, preferred carriers per origin/destination pair, and exception thresholds. Our setup wizard walks your team through it in a guided 30-minute session included in every plan.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3 class="step-title">Track, optimize, and act</h3>
+          <p class="step-desc">From day one, your operations team gets a live control tower dashboard, your finance team gets automated carrier invoice reconciliation, and your customers get a white-labeled tracking portal with your branding.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STATS ──────────────────────────────────────────────────── -->
+  <section class="stats">
+    <div class="container">
+      <span class="section-label">By the numbers</span>
+      <h2 class="section-heading">Built for scale, proven in production</h2>
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-number">2M+</div>
+          <div class="stat-label">Shipments tracked daily</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">97.4%</div>
+          <div class="stat-label">ETA prediction accuracy</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">200+</div>
+          <div class="stat-label">Carrier integrations</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">18 min</div>
+          <div class="stat-label">Avg. onboarding time</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ ────────────────────────────────────────────────────── -->
+  <section class="faq" id="faq">
+    <div class="container">
+      <span class="section-label">FAQ</span>
+      <h2 class="section-heading">Common questions</h2>
+      <p class="section-sub">Still have questions? Chat with us — we usually reply in under 3 minutes.</p>
+
+      <div class="faq-grid">
+
+        <div class="faq-item">
+          <p class="faq-q">What does Northwind cost?</p>
+          <p class="faq-a">Northwind offers three tiers. <strong>Starter</strong> is $299/month and covers up to 500 shipments per month with 5 carrier integrations and 3 user seats. <strong>Growth</strong> is $899/month for up to 5,000 shipments, unlimited carrier integrations, 15 seats, and access to route optimization. <strong>Enterprise</strong> is custom-priced and includes dedicated infrastructure, SLA guarantees, custom integrations, and a named customer success manager. All plans include a 14-day free trial — no credit card required.</p>
+        </div>
+
+        <div class="faq-item">
+          <p class="faq-q">Which ERP and WMS systems do you integrate with?</p>
+          <p class="faq-a">Northwind ships native connectors for SAP S/4HANA, SAP ECC, Oracle NetSuite, Microsoft Dynamics 365, Infor CloudSuite, and Epicor. On the WMS side, we support Manhattan Associates, Blue Yonder, HighJump, and 80+ others. For systems not on this list, our open REST API and webhook infrastructure let your engineering team build a custom integration in 2–4 hours using our documented SDK.</p>
+        </div>
+
+        <div class="faq-item">
+          <p class="faq-q">How long does onboarding take?</p>
+          <p class="faq-a">Most teams complete the initial setup — connecting carriers, configuring their primary shipping lanes, and inviting users — in under 30 minutes using our guided wizard. Historical shipment data backfill (up to 24 months) runs automatically in the background and typically completes within 2 hours. Our onboarding team offers a complimentary live session for Growth and Enterprise customers to walk through carrier authentication, exception rule configuration, and dashboard customization.</p>
+        </div>
+
+        <div class="faq-item">
+          <p class="faq-q">What kind of customer support do you provide?</p>
+          <p class="faq-a">Starter customers get email support with a guaranteed 24-hour response time and access to our self-serve documentation and video library. Growth customers receive priority email and in-app chat support with a 4-hour response SLA during business hours (9am–6pm ET). Enterprise customers get 24/7 phone and chat support, a dedicated Slack channel with their Northwind CSM, and a 1-hour critical-issue response SLA. All customers have access to our public status page and incident postmortems.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="logo" style="margin-bottom:12px;">
+            <div class="logo-mark">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 5L8 2L14 5V11L8 14L2 11V5Z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+                <circle cx="8" cy="8" r="2" fill="#fff"/>
+              </svg>
+            </div>
+            Northwind
+          </div>
+          <p class="footer-tagline">Real-time freight intelligence for modern supply chains. Track, optimize, and act — all from one platform.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#">Real-Time Tracking</a></li>
+            <li><a href="#">Route Optimization</a></li>
+            <li><a href="#">Customs Automation</a></li>
+            <li><a href="#">Exception Alerts</a></li>
+            <li><a href="#">Integrations</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Press</a></li>
+            <li><a href="#">Security</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">API Reference</a></li>
+            <li><a href="#">Status</a></li>
+            <li><a href="#">Changelog</a></li>
+            <li><a href="#">Support</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="footer-copy">© 2025 Northwind Logistics, Inc. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Cookie Preferences</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- CHATBOT SCRIPT TAG GOES HERE -->
+
+</body>
+</html>
