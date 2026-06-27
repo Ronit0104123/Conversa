@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getChatbot, listChatbotLeads, listChatSessions } from '@/lib/api'
@@ -26,6 +26,8 @@ export default function ChatbotDetailPage() {
   const [recursive, setRecursive] = useState(false)
   const [respectRobots, setRespectRobots] = useState(true)
   const [retraining, setRetraining] = useState(false)
+  const pollCountRef = useRef(0)
+  const MAX_POLLS = 90 // 90 × 10s = ~15 min
 
   useEffect(() => {
     async function load() {
@@ -58,7 +60,17 @@ export default function ChatbotDetailPage() {
   useEffect(() => {
     if (!chatbot || chatbot.status !== 'processing' || !token) return
 
+    pollCountRef.current = 0
+
     const interval = setInterval(async () => {
+      pollCountRef.current += 1
+
+      if (pollCountRef.current > MAX_POLLS) {
+        clearInterval(interval)
+        toast.info("Still processing — this is taking a while. Refresh the page to check when it's ready.")
+        return
+      }
+
       try {
         const updated = await getChatbot(token, chatbotId)
         if (updated.status !== 'processing') {
@@ -70,10 +82,10 @@ export default function ChatbotDetailPage() {
             toast.error('Scraping failed. Please try again.')
           }
         }
-      } catch (error) {
+      } catch {
         // Ignore polling errors
       }
-    }, 3000)
+    }, 10000)
 
     return () => clearInterval(interval)
   }, [chatbot?.status, chatbotId, token])

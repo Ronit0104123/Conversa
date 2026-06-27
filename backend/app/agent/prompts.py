@@ -59,13 +59,23 @@ DEFAULT_SYSTEM_PROMPT += "\n\n## Tool Usage Output\nNever show raw tool syntax (
 def build_system_prompt(custom_prompt: str = None, context: str = "") -> str:
     """
     Builds the final system prompt with RAG context injected.
-    
+
     Args:
         custom_prompt: User's custom prompt (overrides default if provided)
         context: Retrieved website content chunks (from RAG)
-    
+
     Returns:
         The complete system prompt with context filled in
     """
     base_prompt = custom_prompt if custom_prompt else DEFAULT_SYSTEM_PROMPT
-    return base_prompt.replace("{context}", context)
+
+    if "{context}" in base_prompt:
+        # DEFAULT_SYSTEM_PROMPT path — placeholder exists, substitute inline
+        return base_prompt.replace("{context}", context)
+
+    # Custom prompt without a {context} placeholder — the replace above would
+    # be a silent no-op, dropping the RAG context entirely. Append it instead.
+    has_context = context and context.strip() and context != "No relevant website content found."
+    if has_context:
+        return base_prompt + f"\n\n## Website Context (use this to answer visitor questions)\n{context}"
+    return base_prompt
