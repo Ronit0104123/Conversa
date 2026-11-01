@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt && python -m playwright install chromium"
+buildCommand = "pip install torch --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt && PLAYWRIGHT_BROWSERS_PATH=0 python -m playwright install chromium"
 
 [deploy]
 startCommand = "bash start.sh"
