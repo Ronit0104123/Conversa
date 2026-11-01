@@ -8,6 +8,10 @@ set -e
 
 cd "$(dirname "$0")"
 
+# Playwright browsers are installed into the app image at build time
+# (PLAYWRIGHT_BROWSERS_PATH=0 in railway.toml); look for them there at runtime.
+export PLAYWRIGHT_BROWSERS_PATH=0
+
 if [ "$1" = "dev" ]; then
   echo "Starting in dev mode (port 8000, --reload)..."
   source venv/bin/activate
