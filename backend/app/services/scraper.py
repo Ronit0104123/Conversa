@@ -28,6 +28,9 @@ from bs4 import BeautifulSoup
 from typing import Optional
 from dataclasses import dataclass
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 import httpx
 import io
 from pypdf import PdfReader
@@ -159,6 +162,7 @@ async def scrape_website(url: str) -> ScrapedContent:
         try:
             browser = await p.chromium.launch(**launch_kwargs)
         except Exception as e:
+            logger.exception("Playwright browser launch failed")
             channel_hint = f" (channel={channel})" if channel else ""
             raise ValueError(
                 "Playwright could not launch a browser" + channel_hint + ". "
