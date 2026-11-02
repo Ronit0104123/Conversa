@@ -92,7 +92,7 @@ export default function ChatbotDetailPage() {
 
   function getEmbedCode() {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'
-    return `<script src="${origin}/widget/widget.js" data-chatbot-id="${chatbotId}"></script>`
+    return `<script src="${origin}/widget/widget.js" data-chatbot-id="${chatbotId}" data-api-url="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}"></script>`
   }
 
   function copyEmbedCode() {
