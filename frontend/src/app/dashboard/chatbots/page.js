@@ -63,7 +63,7 @@ export default function ChatbotsPage() {
   }
 
   function copyEmbedCode(chatbotId) {
-    const code = `<script src="${window.location.origin}/widget/widget.js" data-chatbot-id="${chatbotId}"></script>`
+    const code = `<script src="${window.location.origin}/widget/widget.js" data-chatbot-id="${chatbotId}" data-api-url="${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}"></script>`
     navigator.clipboard.writeText(code)
     toast.success('Embed code copied to clipboard!')
   }
