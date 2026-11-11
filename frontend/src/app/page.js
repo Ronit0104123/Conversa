@@ -310,7 +310,7 @@ export default function Home() {
           <div className="mx-auto max-w-3xl px-6">
             <div className="text-center">
               <h2 className="text-3xl font-semibold">See it in action</h2>
-              <p className="mt-4 text-slate-600">This is exactly how Conversa looks on your site.</p>
+              <p className="mt-4 text-slate-600">A static preview of how the Conversa widget looks on your site.</p>
             </div>
             <div className="mt-12 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
               <div className="flex items-center justify-between bg-gradient-to-br from-indigo-600 to-fuchsia-500 p-6 text-white">
@@ -381,7 +381,7 @@ export default function Home() {
               <div className="relative">
                 <h2 className="text-4xl font-semibold">Start capturing leads today</h2>
                 <p className="mx-auto mt-4 max-w-2xl text-lg text-white/80">
-                  Join over 2,000 businesses already using Conversa to grow their revenue. No credit card required.
+                  Create a chatbot for your website. No credit card required.
                 </p>
                 <Link
                   className="mt-8 inline-flex rounded-2xl bg-white px-10 py-4 text-sm font-semibold text-indigo-700 shadow-2xl transition-transform hover:scale-[1.03]"
