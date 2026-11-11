@@ -221,7 +221,7 @@ export default function Home() {
             >
               <h1 className="text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl tracking-tight">
                 Turn your website into a{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-fuchsia-500">
+                <span className="text-indigo-600">
                   lead-generating
                 </span> AI chatbot
               </h1>
