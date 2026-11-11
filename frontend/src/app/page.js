@@ -147,7 +147,7 @@ export default function Home() {
   }
 
   return (
-    <div className="bg-white text-slate-900">
+    <div className="bg-white text-slate-900 overflow-x-clip">
       <nav className="fixed top-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link className="flex items-center gap-2" href="/">
